@@ -7,22 +7,35 @@
         display: flex;
         flex-direction: row;
     }
+    .center{
+        text-align: center;
+    }
     #drug_details{
         border: 1px solid black;
+        width: 40%;
+        margin: 10px;
+        padding: 5px;
     }
     #barchart{
         border: 1px solid black;
+    }
+    #timeline{
+        border: 1px solid black;
+        margin-top: 10px;
     }
 
   </style>
 </head>
 <body> 
-    <h1> Visualizing European Drug Development in the Past ___ Years </h1>
-    <svg id="barchart" height="500" width="800"> </svg>
+    <div class="center">
+        <h1> Visualizing European Drug Development in the Past ___ Years </h1>
+        <svg id="barchart" height="500" width="800"> </svg>
+        <h3> Specific category goes here: </h3>
+    </div>
     <div class="flex">
         <svg id="timeline" height="100" width="800"> </svg>
         <div id="drug_details"> 
-            <p> Drug details go here: </p>
+            <p style="text-align: center; text-decoration: underline;"> Drug Details: </p>
         </div>
     </div>
     <script>
