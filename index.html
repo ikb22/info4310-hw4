@@ -20,7 +20,6 @@
         border: 1px solid black;
       }
       #timeline {
-        border: 1px solid black;
         margin-top: 10px;
       }
     </style>
@@ -193,6 +192,53 @@
         }
       };
       createGraph();
+
+      // ISABELLE CODE
+      // isabelle --> timeline graph + specific drug information in tabular view
+
+      let timeline = d3.select("#timeline");
+      let timeline_width = timeline.attr("width");
+      let timeline_height = timeline.attr("height");
+      let timeline_margins = { top: 0, right: 0, bottom: 20, left: 0 };
+      let timelineAnnotations = timeline.append("g").attr("id", "annotations");
+      let timelineArea = timeline.append("g").attr("id", "timelinearea");
+
+      // how to time parse the time format we are given???
+      const timeParser = d3.timeParse("%Y-%m-%d %H:%M:%S");
+      let time_extent = d3.extent(drug_data, (d) =>
+        timeParser(d["first_published"])
+      );
+      console.log(time_extent);
+      const timeScale = d3
+        .scaleTime()
+        .domain(time_extent)
+        .range([0, timeline_width]);
+
+      let timeline_bottomAxis = d3.axisBottom(timeScale);
+      timelineAnnotations
+        .append("g")
+        .attr("class", "x axis")
+        .attr(
+          "transform",
+          `translate(${timeline_margins.left},${
+            timeline_height + timeline_margins.top + 10
+          })`
+        )
+        .call(timeline_bottomAxis);
+      let timeline_bottomGridlines = d3
+        .axisBottom(timeScale)
+        .tickSize(-timeline_height - 10)
+        .tickFormat("");
+      timelineAnnotations
+        .append("g")
+        .attr("class", "x gridlines")
+        .attr(
+          "transform",
+          `translate(${timeline_margins.left},${
+            timeline_height + timeline_margins.top + 10
+          })`
+        )
+        .call(timeline_bottomGridlines);
     </script>
   </body>
 </html>
