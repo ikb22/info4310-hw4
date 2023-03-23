@@ -1,53 +1,198 @@
 <html>
-<head>
-  <title> Visualizing European Drug Development </title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <style>
-    .flex{
+  <head>
+    <title>Visualizing European Drug Development</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      .flex {
         display: flex;
         flex-direction: row;
-    }
-    .center{
+      }
+      .center {
         text-align: center;
-    }
-    #drug_details{
+      }
+      #drug_details {
         border: 1px solid black;
         width: 40%;
         margin: 10px;
         padding: 5px;
-    }
-    #barchart{
+      }
+      #barchart {
         border: 1px solid black;
-    }
-    #timeline{
+      }
+      #timeline {
         border: 1px solid black;
         margin-top: 10px;
-    }
-
-  </style>
-</head>
-<body> 
+      }
+    </style>
+  </head>
+  <body>
     <div class="center">
-        <h1> Visualizing European Drug Development in the Past ___ Years </h1>
-        <svg id="barchart" height="500" width="800"> </svg>
-        <h3> Specific category goes here: </h3>
+      <h1>Visualizing European Drug Development in the Past ___ Years</h1>
+      <svg id="barGraph" height="500" width="800"></svg>
+      <h3>Specific category goes here:</h3>
     </div>
     <div class="flex">
-        <svg id="timeline" height="100" width="800"> </svg>
-        <div id="drug_details"> 
-            <p style="text-align: center; text-decoration: underline;"> Drug Details: </p>
-        </div>
+      <svg id="timeline" height="100" width="800"></svg>
+      <div id="drug_details">
+        <p style="text-align: center; text-decoration: underline">
+          Drug Details:
+        </p>
+      </div>
     </div>
     <script>
+      // bar chart setup
+      let barGraph = d3.select("svg#barGraph");
+      const barTotalWidth = barGraph.attr("width");
+      const barTotalHeight = barGraph.attr("height");
+      const barGraphMargin = {
+        top: 10,
+        right: 10,
+        bottom: 120,
+        left: 70,
+      };
+      const barGraphWidth =
+        barTotalWidth - barGraphMargin.left - barGraphMargin.right;
+      const barGraphHeight =
+        barTotalHeight - barGraphMargin.top - barGraphMargin.bottom - 10;
+      let barGraphAnnotations = barGraph.append("g").attr("id", "annotations");
+      //   let hist_approved = {
+      //     "Diabetes Mellitus, Type 2": 57,
+      //     "HIV Infections": 61,
+      //     Hypertension: 30,
+      //     "Diabetes Mellitus": 29,
+      //     "Pulmonary Disease, Chronic Obstructive": 27,
+      //     "Multiple Myeloma": 22,
+      //     "Hepatitis C, Chronic": 9,
+      //     "Parkinson Disease": 17,
+      //     "Carcinoma, Non-Small-Cell Lung": 17,
+      //     Epilepsy: 17,
+      //   };
 
-        const createGraph = async function() {
-            let drug_data = await d3.csv("drugs_clean.csv");
-            console.log(drug_data);
+      let areas = [
+        "Diabetes Mellitus, Type 2",
+        "HIV Infections",
+        "Hypertension",
+        "Diabetes Mellitus",
+        "Pulmonary Disease, Chronic Obstructive",
+        "Multiple Myeloma",
+        "Hepatitis C, Chronic",
+        "Parkinson Disease",
+        "Carcinoma, Non-Small-Cell Lung",
+        "Epilepsy",
+      ];
 
+      const createGraph = async function () {
+        let histo = d3.select("#histo");
+        let drug_data = await d3.csv("drugs_clean.csv");
+        console.log(drug_data);
+
+        hist_approved = {};
+        hist_withdrawn = {};
+
+        areas.forEach((a) => {
+          hist_approved[a] = 0;
+          hist_withdrawn[a] = 0;
+        });
+
+        drug_data.forEach((d) => {
+          let approved = d.authorisation_status;
+          if (approved == "authorised") {
+            hist_approved[d.therapeutic_area] += 1;
+          } else {
+            hist_withdrawn[d.therapeutic_area] += 1;
+          }
+        });
+
+        console.log("hist:", hist_approved, hist_withdrawn);
+
+        // Y scale (Count)
+        let countScale = d3
+          .scaleLinear()
+          .domain([0, 100])
+          .range([barGraphHeight, 0]);
+
+        console.log("test count", countScale("80"));
+
+        // X Scale (Category)
+        let areaScale = d3.scaleBand().domain(areas).range([0, barGraphWidth]);
+
+        let bottomAxis = d3.axisBottom(areaScale);
+        barGraphAnnotations
+          .append("g")
+          .attr("class", "x axis")
+          .attr(
+            "transform",
+            `translate(${barGraphMargin.left}, ${
+              barGraphHeight + barGraphMargin.top + 10
+            })`
+          )
+          .call(bottomAxis)
+          .selectAll("text")
+          .style("text-anchor", "end")
+          .attr("transform", "translate(-10, 2) rotate(-65)");
+
+        let leftAxis = d3.axisLeft(countScale);
+        barGraphAnnotations
+          .append("g")
+          .attr("class", "y axis")
+          .attr(
+            "transform",
+            `translate(${barGraphMargin.left - 10}, ${barGraphMargin.top})`
+          )
+          .call(leftAxis);
+
+        barGraphAnnotations
+          .append("text")
+          .attr("class", "x label")
+          .attr("text-anchor", "middle")
+          .attr("x", barGraphWidth / 2 + barGraphMargin.left)
+          .attr(
+            "y",
+            barGraphHeight + barGraphMargin.top + barGraphMargin.bottom
+          )
+          .text("Thereupetic Area");
+
+        barGraphAnnotations
+          .append("text")
+          .attr("class", "y label")
+          .attr("text-anchor", "middle")
+          .attr("y", 5)
+          .attr("x", -barGraphHeight / 2 + barGraphMargin.top)
+          .attr("dy", ".6em")
+          .attr("transform", "rotate(-90)")
+          .text("Count");
+
+        let rectWidth = barGraphWidth / 20 - 10;
+
+        // // make some bars
+        for (key in hist_approved) {
+          let a_count = hist_approved[key];
+          let w_count = hist_withdrawn[key];
+
+          barGraph
+            .append("rect")
+            .attr("x", areaScale(key) + barGraphMargin.left + 10)
+            .attr("y", countScale(a_count) + barGraphMargin.top)
+            .attr("width", rectWidth)
+            .attr("height", barGraphHeight - countScale(a_count))
+            .style("fill", "#90EF90")
+            .attr("class", `approved-bar ${key}`);
+
+          barGraph
+            .append("rect")
+            .attr("x", areaScale(key) + barGraphMargin.left + 35)
+            .attr("y", countScale(w_count) + barGraphMargin.top)
+            .attr("width", rectWidth)
+            .attr("height", barGraphHeight - countScale(w_count))
+            .style("fill", "#FC6C85")
+            .attr("class", `withdrawn-bar ${key}`);
+
+          //  .attr("y", valueScale(dict[key]))
+          //                 .attr("height", valueScale(0) - valueScale(dict[key]))
+          //                 .attr("width", speciesScale.bandwidth());
         }
-        createGraph();
-
+      };
+      createGraph();
     </script>
-</body>
+  </body>
 </html>
-
