@@ -31,6 +31,10 @@
         stroke: black;
       }
 
+      .box:hover {
+        stroke: black;
+      }
+
       rect.bar:hover {
       }
     </style>
@@ -214,7 +218,7 @@
           .attr("class", "wtext")
           .attr("text-anchor", "middle")
           .attr("y", barGraphMargin.top + 47)
-          .attr("x", 860)
+          .attr("x", 865)
           .attr("dy", ".5em")
           .style("stroke", "black")
           .text("Withdrawn");
@@ -238,6 +242,7 @@
             .style("fill", "#90EF90")
             .attr("class", `a ${key} bar`)
             .attr("area", barCount)
+            .attr("therapeutic_area", key + "-" + "a")
             .on("mouseover", function (d) {
               let area = d3.select(this).attr("area");
               console.log(area);
@@ -247,6 +252,10 @@
               let area = d3.select(this).attr("area");
               console.log(area);
               d3.select(`[id="${area}"]`).style("opacity", 0);
+            })
+            .on("click", function (d) {
+              let area = d3.select(this).attr("therapeutic_area");
+              barSelected(area);
             });
 
           barGraphAnnotations
@@ -284,6 +293,7 @@
             .attr("area", barCount)
             .style("fill", "#FC6C85")
             .attr("class", `w ${key} bar`)
+            .attr("therapeutic_area", key + "-" + "w")
             .on("mouseover", function (d) {
               let area = d3.select(this).attr("area");
               console.log(area);
@@ -293,16 +303,19 @@
               let area = d3.select(this).attr("area");
               console.log(area);
               d3.select(`[id="${area}"]`).style("opacity", 0);
+            })
+            .on("click", function (d) {
+              let area = d3.select(this).attr("therapeutic_area");
+              barSelected(area);
             });
-
-          //  .attr("y", valueScale(dict[key]))
-          //                 .attr("height", valueScale(0) - valueScale(dict[key]))
-          //                 .attr("width", speciesScale.bandwidth());
         }
 
         function hideBars(type) {
-          let all = d3.selectAll(".bar").style("opacity", "0.2");
-          let selected = d3.selectAll(`.${type}`).style("opacity", "1");
+          let all = d3.selectAll(".bar").style("opacity", "0");
+          let selected = d3
+            .selectAll(`.${type}`)
+            .transition()
+            .style("opacity", "1");
         }
 
         function highlightBar(bar) {
@@ -310,7 +323,11 @@
         }
 
         function showAllBars() {
-          d3.selectAll(`.bar`).style("opacity", "1");
+          d3.selectAll(`.bar`).transition().style("opacity", "1");
+        }
+
+        function barSelected(area) {
+          console.log("click: ", area);
         }
 
         // ISABELLE CODE
