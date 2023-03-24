@@ -260,13 +260,13 @@
 
           barGraphAnnotations
             .append("text")
-            .attr("class", "atext")
+            .attr("class", "acount")
             .attr("id", barCount)
             .attr("text-anchor", "middle")
             .attr("y", countScale(a_count) - 10)
             .attr("x", areaScale(key) + barGraphMargin.left + 24)
             .attr("dy", ".5em")
-            .style("stroke", "black")
+            .style("stroke", "green")
             .style("opacity", 0.0)
             .text(a_count);
 
@@ -274,13 +274,13 @@
 
           barGraphAnnotations
             .append("text")
-            .attr("class", "atext")
+            .attr("class", "wcount")
             .attr("id", barCount)
             .attr("text-anchor", "middle")
             .attr("y", countScale(w_count) - 10)
             .attr("x", areaScale(key) + barGraphMargin.left + 50)
             .attr("dy", ".5em")
-            .style("stroke", "black")
+            .style("stroke", "red")
             .style("opacity", 0.0)
             .text(w_count);
 
