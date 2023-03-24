@@ -20,14 +20,14 @@
         border: 1px solid black;
       }
       #timeline {
-        margin-top: 10px;
+        margin: 10px;
       }
     </style>
   </head>
   <body>
     <div class="center">
-      <h1>Visualizing European Drug Development in the Past ___ Years</h1>
-      <svg id="barGraph" height="500" width="1000"></svg>
+      <h1>Visualizing European Drug Development in the Past 20 Years</h1>
+      <svg id="barGraph" height="600" width="1000"></svg>
       <h3>Specific category goes here:</h3>
     </div>
     <div class="flex">
@@ -46,7 +46,7 @@
       const barGraphMargin = {
         top: 10,
         right: 200,
-        bottom: 120,
+        bottom: 180,
         left: 70,
       };
       const barGraphWidth =
@@ -193,7 +193,7 @@
 
         let rectWidth = barGraphWidth / 20 - 10;
 
-        // // make some bars
+        // make some bars
         for (key in hist_approved) {
           let a_count = hist_approved[key];
           let w_count = hist_withdrawn[key];
@@ -220,55 +220,45 @@
           //                 .attr("height", valueScale(0) - valueScale(dict[key]))
           //                 .attr("width", speciesScale.bandwidth());
         }
-      };
+      
+
+        // ISABELLE CODE
+        // isabelle --> timeline graph + specific drug information in tabular view
+
+        let timeline = d3.select("#timeline");
+        let timeline_width = timeline.attr("width");
+        let timeline_height = timeline.attr("height");
+        let timeline_margins = { top: 0, right: 5, bottom: 20, left: 5 };
+        let graphWidth = timeline_width - timeline_margins.left - timeline_margins.right;
+        let graphHeight = timeline_height - timeline_margins.top - timeline_margins.bottom;
+        let timelineAnnotations = timeline.append("g").attr("id", "annotations");
+        let timelineArea = timeline.append("g").attr("id", "timelinearea");
+
+        // how to time parse the time format we are given???
+        const timeParser = d3.timeParse("%Y-%m-%dT%H:%M:%SZ");
+        let time_extent = d3.extent(drug_data, (d) =>
+            timeParser(d["first_published"])
+        );
+        console.log("time extent", time_extent);
+        const timeScale = d3
+            .scaleTime()
+            .domain(time_extent)
+            .range([0, graphWidth]);
+
+        let timeline_bottomAxis = d3.axisBottom(timeScale);
+        timelineAnnotations
+            .append("g")
+            .attr("class", "x axis")
+            .attr(
+            "transform",
+            `translate(${timeline_margins.left},${
+                graphHeight
+            })`
+            )
+            .call(timeline_bottomAxis);
+
+         };
       createGraph();
-
-      // ISABELLE CODE
-      // isabelle --> timeline graph + specific drug information in tabular view
-
-      let timeline = d3.select("#timeline");
-      let timeline_width = timeline.attr("width");
-      let timeline_height = timeline.attr("height");
-      let timeline_margins = { top: 0, right: 0, bottom: 20, left: 0 };
-      let timelineAnnotations = timeline.append("g").attr("id", "annotations");
-      let timelineArea = timeline.append("g").attr("id", "timelinearea");
-
-      // how to time parse the time format we are given???
-      const timeParser = d3.timeParse("%Y-%m-%d %H:%M:%S");
-      let time_extent = d3.extent(drug_data, (d) =>
-        timeParser(d["first_published"])
-      );
-      console.log(time_extent);
-      const timeScale = d3
-        .scaleTime()
-        .domain(time_extent)
-        .range([0, timeline_width]);
-
-      let timeline_bottomAxis = d3.axisBottom(timeScale);
-      timelineAnnotations
-        .append("g")
-        .attr("class", "x axis")
-        .attr(
-          "transform",
-          `translate(${timeline_margins.left},${
-            timeline_height + timeline_margins.top + 10
-          })`
-        )
-        .call(timeline_bottomAxis);
-      let timeline_bottomGridlines = d3
-        .axisBottom(timeScale)
-        .tickSize(-timeline_height - 10)
-        .tickFormat("");
-      timelineAnnotations
-        .append("g")
-        .attr("class", "x gridlines")
-        .attr(
-          "transform",
-          `translate(${timeline_margins.left},${
-            timeline_height + timeline_margins.top + 10
-          })`
-        )
-        .call(timeline_bottomGridlines);
     </script>
   </body>
 </html>
