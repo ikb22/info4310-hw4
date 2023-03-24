@@ -252,15 +252,13 @@
             .style("fill", "#90EF90")
             .attr("class", `a ${key} bar`)
             .attr("area", barCount)
-            .attr("therapeutic_area", key + "-" + "a")
+            .attr("therapeutic_area", key + "--" + "a")
             .on("mouseover", function (d) {
               let area = d3.select(this).attr("area");
-              console.log(area);
               d3.select(`[id="${area}"]`).style("opacity", 1);
             })
             .on("mouseout", function () {
               let area = d3.select(this).attr("area");
-              console.log(area);
               d3.select(`[id="${area}"]`).style("opacity", 0);
             })
             .on("click", function (d) {
@@ -303,15 +301,13 @@
             .attr("area", barCount)
             .style("fill", "#FC6C85")
             .attr("class", `w ${key} bar`)
-            .attr("therapeutic_area", key + "-" + "w")
+            .attr("therapeutic_area", key + "--" + "w")
             .on("mouseover", function (d) {
               let area = d3.select(this).attr("area");
-              console.log(area);
               d3.select(`[id="${area}"]`).style("opacity", 1);
             })
             .on("mouseout", function () {
               let area = d3.select(this).attr("area");
-              console.log(area);
               d3.select(`[id="${area}"]`).style("opacity", 0);
             })
             .on("click", function (d) {
@@ -348,6 +344,11 @@
         // function that gives the thereapeutic area and whether or not it's approved or withdrawn
         function barSelected(area) {
           console.log("click: ", area);
+          // therapeutic area selected
+          let ta = area.substring(0, area.indexOf("--"));
+          // approval status
+          let approval = area.substring(area.indexOf("--") + 2);
+          console.log(ta, approval);
         }
 
         // ISABELLE CODE
