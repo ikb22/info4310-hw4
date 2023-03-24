@@ -205,7 +205,7 @@
         // texts
         barGraphAnnotations
           .append("text")
-          .attr("class", "atext")
+          .attr("class", "alegend legend")
           .attr("text-anchor", "middle")
           .attr("y", barGraphMargin.top + 7)
           .attr("x", 860)
@@ -215,7 +215,7 @@
 
         barGraphAnnotations
           .append("text")
-          .attr("class", "wtext")
+          .attr("class", "wlegend legend")
           .attr("text-anchor", "middle")
           .attr("y", barGraphMargin.top + 47)
           .attr("x", 865)
@@ -316,6 +316,11 @@
             .selectAll(`.${type}`)
             .transition()
             .style("opacity", "1");
+          let color = type == "a" ? "green" : "red";
+          let selectedText = d3
+            .selectAll(`.${type}legend`)
+            .transition()
+            .style("stroke", color);
         }
 
         function highlightBar(bar) {
@@ -324,6 +329,10 @@
 
         function showAllBars() {
           d3.selectAll(`.bar`).transition().style("opacity", "1");
+          let selectedText = d3
+            .selectAll(`.legend`)
+            .transition()
+            .style("stroke", "black");
         }
 
         function barSelected(area) {
