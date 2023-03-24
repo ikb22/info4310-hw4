@@ -22,7 +22,24 @@
       #timeline {
         margin: 10px;
       }
+
+      body {
+        font-family: "Work Sans", sans-serif;
+      }
+
+      .bar:hover {
+        stroke: black;
+      }
+
+      rect.bar:hover {
+      }
     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Work+Sans&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div class="center">
@@ -152,30 +169,41 @@
         // make some filters
 
         // boxes
-        barGraphAnnotations
+        let a_box = barGraphAnnotations
           .append("rect")
-          .attr("class", "a")
+          .attr("id", "a")
+          .attr("class", "box")
           .attr("y", barGraphMargin.top)
           .attr("x", 800)
           .attr("height", 20)
           .attr("width", 20)
           .style("fill", "#90EF90");
 
-        barGraphAnnotations
+        let w_box = barGraphAnnotations
           .append("rect")
-          .attr("class", "w")
+          .attr("id", "w")
+          .attr("class", "box")
           .attr("y", barGraphMargin.top + 40)
           .attr("x", 800)
           .attr("height", 20)
           .attr("width", 20)
           .style("fill", "#FC6C85");
 
+        d3.selectAll(".box")
+          .on("mouseover", function (d) {
+            let type = d.target.id;
+            hideBars(type);
+          })
+          .on("mouseout", function () {
+            showAllBars();
+          });
+
         // texts
         barGraphAnnotations
           .append("text")
           .attr("class", "atext")
           .attr("text-anchor", "middle")
-          .attr("y", barGraphMargin.top)
+          .attr("y", barGraphMargin.top + 7)
           .attr("x", 860)
           .attr("dy", ".5em")
           .style("stroke", "black")
@@ -185,7 +213,7 @@
           .append("text")
           .attr("class", "wtext")
           .attr("text-anchor", "middle")
-          .attr("y", barGraphMargin.top + 40)
+          .attr("y", barGraphMargin.top + 47)
           .attr("x", 860)
           .attr("dy", ".5em")
           .style("stroke", "black")
@@ -193,8 +221,11 @@
 
         let rectWidth = barGraphWidth / 20 - 10;
 
+        let barCount = 0;
+
         // make some bars
         for (key in hist_approved) {
+          barCount += 1;
           let a_count = hist_approved[key];
           let w_count = hist_withdrawn[key];
 
@@ -205,22 +236,82 @@
             .attr("width", rectWidth)
             .attr("height", barGraphHeight - countScale(a_count))
             .style("fill", "#90EF90")
-            .attr("class", `approved-bar ${key}`);
+            .attr("class", `a ${key} bar`)
+            .attr("area", barCount)
+            .on("mouseover", function (d) {
+              let area = d3.select(this).attr("area");
+              console.log(area);
+              d3.select(`[id="${area}"]`).style("opacity", 1);
+            })
+            .on("mouseout", function () {
+              let area = d3.select(this).attr("area");
+              console.log(area);
+              d3.select(`[id="${area}"]`).style("opacity", 0);
+            });
+
+          barGraphAnnotations
+            .append("text")
+            .attr("class", "atext")
+            .attr("id", barCount)
+            .attr("text-anchor", "middle")
+            .attr("y", countScale(a_count) - 10)
+            .attr("x", areaScale(key) + barGraphMargin.left + 24)
+            .attr("dy", ".5em")
+            .style("stroke", "black")
+            .style("opacity", 0.0)
+            .text(a_count);
+
+          barCount += 1;
+
+          barGraphAnnotations
+            .append("text")
+            .attr("class", "atext")
+            .attr("id", barCount)
+            .attr("text-anchor", "middle")
+            .attr("y", countScale(w_count) - 10)
+            .attr("x", areaScale(key) + barGraphMargin.left + 50)
+            .attr("dy", ".5em")
+            .style("stroke", "black")
+            .style("opacity", 0.0)
+            .text(w_count);
 
           barGraph
             .append("rect")
-            .attr("x", areaScale(key) + barGraphMargin.left + 35)
+            .attr("x", areaScale(key) + barGraphMargin.left + 36.5)
             .attr("y", countScale(w_count) + barGraphMargin.top)
             .attr("width", rectWidth)
             .attr("height", barGraphHeight - countScale(w_count))
+            .attr("area", barCount)
             .style("fill", "#FC6C85")
-            .attr("class", `withdrawn-bar ${key}`);
+            .attr("class", `w ${key} bar`)
+            .on("mouseover", function (d) {
+              let area = d3.select(this).attr("area");
+              console.log(area);
+              d3.select(`[id="${area}"]`).style("opacity", 1);
+            })
+            .on("mouseout", function () {
+              let area = d3.select(this).attr("area");
+              console.log(area);
+              d3.select(`[id="${area}"]`).style("opacity", 0);
+            });
 
           //  .attr("y", valueScale(dict[key]))
           //                 .attr("height", valueScale(0) - valueScale(dict[key]))
           //                 .attr("width", speciesScale.bandwidth());
         }
-      
+
+        function hideBars(type) {
+          let all = d3.selectAll(".bar").style("opacity", "0.2");
+          let selected = d3.selectAll(`.${type}`).style("opacity", "1");
+        }
+
+        function highlightBar(bar) {
+          bar.style("stroke", "black");
+        }
+
+        function showAllBars() {
+          d3.selectAll(`.bar`).style("opacity", "1");
+        }
 
         // ISABELLE CODE
         // isabelle --> timeline graph + specific drug information in tabular view
@@ -229,35 +320,36 @@
         let timeline_width = timeline.attr("width");
         let timeline_height = timeline.attr("height");
         let timeline_margins = { top: 0, right: 5, bottom: 20, left: 5 };
-        let graphWidth = timeline_width - timeline_margins.left - timeline_margins.right;
-        let graphHeight = timeline_height - timeline_margins.top - timeline_margins.bottom;
-        let timelineAnnotations = timeline.append("g").attr("id", "annotations");
+        let graphWidth =
+          timeline_width - timeline_margins.left - timeline_margins.right;
+        let graphHeight =
+          timeline_height - timeline_margins.top - timeline_margins.bottom;
+        let timelineAnnotations = timeline
+          .append("g")
+          .attr("id", "annotations");
         let timelineArea = timeline.append("g").attr("id", "timelinearea");
 
         // how to time parse the time format we are given???
         const timeParser = d3.timeParse("%Y-%m-%dT%H:%M:%SZ");
         let time_extent = d3.extent(drug_data, (d) =>
-            timeParser(d["first_published"])
+          timeParser(d["first_published"])
         );
         console.log("time extent", time_extent);
         const timeScale = d3
-            .scaleTime()
-            .domain(time_extent)
-            .range([0, graphWidth]);
+          .scaleTime()
+          .domain(time_extent)
+          .range([0, graphWidth]);
 
         let timeline_bottomAxis = d3.axisBottom(timeScale);
         timelineAnnotations
-            .append("g")
-            .attr("class", "x axis")
-            .attr(
+          .append("g")
+          .attr("class", "x axis")
+          .attr(
             "transform",
-            `translate(${timeline_margins.left},${
-                graphHeight
-            })`
-            )
-            .call(timeline_bottomAxis);
-
-         };
+            `translate(${timeline_margins.left},${graphHeight})`
+          )
+          .call(timeline_bottomAxis);
+      };
       createGraph();
     </script>
   </body>
