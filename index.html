@@ -6,13 +6,13 @@
       .flex {
         display: flex;
         flex-direction: row;
+        justify-content: space-between;
       }
       .center {
         text-align: center;
       }
       #drug_details {
-        border: 1px solid black;
-        width: 40%;
+        width: 30%;
         margin: 10px;
         padding: 5px;
       }
@@ -37,14 +37,14 @@
 
       .bar:hover {
         stroke: black;
+        stroke-width: 3px;
       }
 
       .box:hover {
         stroke: black;
+        stroke-width: 3px;
       }
 
-      rect.bar:hover {
-      }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -57,14 +57,19 @@
     <div class="center">
       <h1>Visualizing European Drug Development in the Past 20 Years</h1>
       <svg id="barGraph" height="600" width="1000"></svg>
-      <h3>Specific category goes here:</h3>
+      <h3 id="subtitle" style="margin-top: 20px; text-decoration: underline;"> </h3>
     </div>
     <div class="flex">
-      <svg id="timeline" height="100" width="800"></svg>
+      <svg id="timeline" height="100" width="900"></svg>
       <div id="drug_details">
         <p style="text-align: center; text-decoration: underline">
           Drug Details:
         </p>
+        <p id="name"> Common Name: </p>
+        <p id="category"> Category: </p>
+        <p id="substance"> Active Substance: </p>
+        <p id="author"> Authorization Status: </p>
+        <p id="url"> Learn More: </p>
       </div>
     </div>
     <script>
@@ -219,7 +224,7 @@
           .attr("x", 860)
           .attr("dy", ".5em")
           .style("stroke", "black")
-          .style("font-weight", 400)
+          .style("stroke-width", 0.5)
           .text("Approved");
 
         barGraphAnnotations
@@ -229,8 +234,8 @@
           .attr("y", barGraphMargin.top + 47)
           .attr("x", 865)
           .attr("dy", ".5em")
-          .style("font-weight", 400)
           .style("stroke", "black")
+          .style("stroke-width", 0.5)
           .text("Withdrawn");
 
         let rectWidth = barGraphWidth / 20 - 10;
@@ -249,7 +254,7 @@
             .attr("y", countScale(a_count) + barGraphMargin.top)
             .attr("width", rectWidth)
             .attr("height", barGraphHeight - countScale(a_count))
-            .style("fill", "#90EF90")
+            .style("fill", "green")
             .attr("class", `a ${key} bar`)
             .attr("area", barCount)
             .attr("therapeutic_area", key + "--" + "a")
@@ -275,6 +280,7 @@
             .attr("x", areaScale(key) + barGraphMargin.left + 24)
             .attr("dy", ".5em")
             .style("stroke", "green")
+            .style("fill", "green")
             .style("opacity", 0.0)
             .text(a_count);
 
@@ -289,6 +295,7 @@
             .attr("x", areaScale(key) + barGraphMargin.left + 50)
             .attr("dy", ".5em")
             .style("stroke", "red")
+            .style("fill", "red")
             .style("opacity", 0.0)
             .text(w_count);
 
@@ -299,7 +306,7 @@
             .attr("width", rectWidth)
             .attr("height", barGraphHeight - countScale(w_count))
             .attr("area", barCount)
-            .style("fill", "#FC6C85")
+            .style("fill", "red")
             .attr("class", `w ${key} bar`)
             .attr("therapeutic_area", key + "--" + "w")
             .on("mouseover", function (d) {
@@ -349,6 +356,64 @@
           // approval status
           let approval = area.substring(area.indexOf("--") + 2);
           console.log(ta, approval);
+
+          let filtered_data = drug_data.filter(d => d['therapeutic_area'] === ta );
+          document.getElementById("subtitle").innerHTML = ta;
+
+
+          let circles = timelineArea.selectAll("circle.dot").data(filtered_data)
+                  .join((enter) =>
+                    enter
+                      .append("circle")
+                      .attr("class", "dot")
+                      .on("mouseover", mouseOver)
+                      .on("mouseout", mouseOut)
+                  )
+                  .attr("cx", d => timeScale(timeParser(d['first_published'])))
+                  .attr("cy", d => {
+                          if (d['authorisation_status'] === "authorised") {
+                            return 30
+                          }
+                          else{
+                            return 60
+                          }
+                  })
+                  .attr("r", 5)
+                  .attr("opacity", 0.5)
+                  .style("fill", d => {
+                          if (d['authorisation_status'] === "authorised") {
+                            return "green"
+                          }
+                          else{
+                            return "red"
+                          }
+                  })
+
+          function mouseOver(event, d) {
+              let object = d3.select(this);
+              object.attr("r", 6).attr("stroke", "black").attr("stroke-width", 2)
+                                  .attr("oppacity", 0.8)
+
+              let name = document.getElementById("name");
+              let category = document.getElementById("category");
+              let substance = document.getElementById("substance");
+              let authorization = document.getElementById("author");
+              let url = document.getElementById("url");
+   
+
+              name.textContent = "Common Name: " + d.common_name;
+              category.textContent = "Category: " + d.category;
+              substance.textContent = "Active Substance: " + d.active_substance;
+              authorization.textContent = "Authorization Status: " + d.authorisation_status;
+              url.textContent = "Learn More: " + d.url;
+
+          }
+          function mouseOut(event, d) {
+              let object = d3.select(this);
+              object.attr("r", 5).attr("stroke", "none").attr("oppacity", 0.5);
+
+          }
+
         }
 
         // ISABELLE CODE
@@ -357,7 +422,7 @@
         let timeline = d3.select("#timeline");
         let timeline_width = timeline.attr("width");
         let timeline_height = timeline.attr("height");
-        let timeline_margins = { top: 0, right: 5, bottom: 20, left: 5 };
+        let timeline_margins = { top: 0, right: 10, bottom: 20, left: 10 };
         let graphWidth =
           timeline_width - timeline_margins.left - timeline_margins.right;
         let graphHeight =
@@ -365,7 +430,8 @@
         let timelineAnnotations = timeline
           .append("g")
           .attr("id", "annotations");
-        let timelineArea = timeline.append("g").attr("id", "timelinearea");
+        let timelineArea = timeline.append("g").attr("id","points")
+                                    .attr("transform",`translate(${timeline_margins.left},${timeline_margins.top})`);
 
         // how to time parse the time format we are given???
         const timeParser = d3.timeParse("%Y-%m-%dT%H:%M:%SZ");
@@ -387,6 +453,7 @@
             `translate(${timeline_margins.left},${graphHeight})`
           )
           .call(timeline_bottomAxis);
+
       };
       createGraph();
     </script>
