@@ -15,10 +15,12 @@
 
       .clear {
         cursor: pointer;
+        font-size: 16px;
       }
 
       .clear:hover {
         text-decoration: underline;
+        color: #fc6c85;
       }
 
       #drug_details {
@@ -359,7 +361,6 @@
               let area = d3.select(this).attr("therapeutic_area");
               barSelected(area);
               console.log("trying to run clicked");
-              scrollUp();
             });
         }
 
@@ -379,7 +380,15 @@
           d3.selectAll(`.bar`).transition().style("opacity", "1");
         }
 
-        // function that gives the thereapeutic area and whether or not it's approved or withdrawn
+        function clear() {
+          d3.selectAll(".bar").transition().style("opacity", 1);
+          window.scrollTo({
+            top: -20,
+            behavior: "smooth",
+          });
+        }
+
+        // function that gives the therapeutic area and whether or not it's approved or withdrawn
         function barSelected(area) {
           //timeline.selectAll("*").remove();
           let ta = area.substring(0, area.indexOf("--"));
@@ -389,11 +398,13 @@
             (d) => d["therapeutic_area"] === ta
           );
 
-          let buttonHTML = `<span onclick='clearSelection()' class='clear'> (Clear Selection)</span>`;
+          let buttonHTML = `<span id='clear' class="clear"> (Clear Selection)</span>`;
           let taHTML = `<span> ${ta}</span>`;
 
           document.getElementById("subtitle").innerHTML = taHTML + buttonHTML;
           d3.selectAll(".bar").style("opacity", 0.4);
+
+          document.getElementById("clear").addEventListener("click", clear);
 
           document.getElementsByClassName(ta)[0].style.opacity = 1.0;
           document.getElementsByClassName(ta)[1].style.opacity = 1.0;
