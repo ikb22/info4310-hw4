@@ -61,7 +61,8 @@
       }
 
       #barGraph,
-      #timeline {
+      #timeline,
+      svg {
         box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
       }
 
@@ -103,11 +104,12 @@
           <svg id="barGraph" height="750" width="1300"></svg>
           <h2 id="subtitle" style="margin-top: 20px"></h2>
           <div class="pie">
-            <svg class="generic" height="500" width="200"></svg>
+            <!-- <svg class="generic" height="300" width="200"></svg>
+            <svg class="human" height="300" width="200"></svg> -->
           </div>
           <div>
             <div style="display: block; text-align: left; margin-left: 10px">
-              <h2>Timeline of Drugs Approval/Withdrawn</h2>
+              <h2>Timeline of Drugs Publish Date</h2>
             </div>
 
             <div style="display: flex">
@@ -119,6 +121,7 @@
                     text-decoration: underline;
                     font-weight: 1000;
                   "
+                  id="title"
                 >
                   Hover over a drug to reveal its details...
                 </p>
@@ -169,35 +172,34 @@
         "Epilepsy",
       ];
 
-      function createSmallGraph(data, svg) {
+      function createSmallGraph(data, svg, cat1, cat2) {
         console.log("svg", svg);
         // bar chart setup
-        const barTotalWidth = barGraph.attr("width");
+        const barTotalWidth = svg.attr("width");
         const barTotalHeight = svg.attr("height");
         const svgMargin = {
           top: 20,
-          right: 100,
-          bottom: 180,
-          left: 100,
+          right: 20,
+          bottom: 90,
+          left: 60,
         };
         const svgWidth = barTotalWidth - svgMargin.left - svgMargin.right;
         const svgHeight =
           barTotalHeight - svgMargin.top - svgMargin.bottom - 10;
-        let svgAnnotations = svg.append("g").attr("id", "annotations");
+        let svgAnnotations = svg.append("g").attr("id", "svgAnnotations");
 
         // Y scale (Count)
-        let countScale = d3
-          .scaleLinear()
-          .domain([0, 100])
-          .range([barGraphHeight, 0]);
+        let countScale = d3.scaleLinear().domain([0, 80]).range([svgHeight, 0]);
 
         console.log("test count", countScale("80"));
 
         // X Scale (Category)
         let areaScale = d3
           .scaleBand()
-          .domain(["Generic", "Not Generic"])
-          .range([0, barGraphWidth]);
+          .domain([cat1, cat2])
+          .range([0, svgWidth]);
+
+        console.log("test scale:", areaScale("Gen"));
 
         // Y Axis
         let bottomAxis = d3.axisBottom(areaScale);
@@ -206,9 +208,7 @@
           .attr("class", "x axis")
           .attr(
             "transform",
-            `translate(${barGraphMargin.left}, ${
-              barGraphHeight + barGraphMargin.top + 10
-            })`
+            `translate(${svgMargin.left}, ${svgHeight + svgMargin.top + 10})`
           )
           .call(bottomAxis)
           .selectAll("text")
@@ -221,7 +221,7 @@
           .attr("class", "y axis")
           .attr(
             "transform",
-            `translate(${barGraphMargin.left - 10}, ${barGraphMargin.top})`
+            `translate(${svgMargin.left - 10}, ${svgMargin.top})`
           )
           .call(leftAxis);
 
@@ -229,22 +229,41 @@
           .append("text")
           .attr("class", "x label")
           .attr("text-anchor", "middle")
-          .attr("x", barGraphWidth / 2 + barGraphMargin.left)
-          .attr(
-            "y",
-            barGraphHeight + barGraphMargin.top + barGraphMargin.bottom
-          )
-          .text("Thereupetic Area");
+          .attr("x", svgWidth / 2 + svgMargin.left)
+          .attr("y", svgHeight + svgMargin.top + svgMargin.bottom)
+          .text("Therapeutic Area");
 
         svgAnnotations
           .append("text")
           .attr("class", "y label")
           .attr("text-anchor", "middle")
           .attr("y", 5)
-          .attr("x", -barGraphHeight / 2 + barGraphMargin.top)
+          .attr("x", -svgHeight / 2 + svgMargin.top)
           .attr("dy", ".6em")
           .attr("transform", "rotate(-90)")
           .text("Count");
+
+        let color;
+
+        for (key in data) {
+          //make some bars
+          if (key == cat1) {
+            color = "green";
+          } else {
+            color = "red";
+          }
+
+          svg
+            .append("rect")
+            .attr("x", areaScale(key) + svgMargin.left + 15)
+            .attr("y", countScale(data[key]) + svgMargin.top)
+            .attr("width", 30)
+            .attr("height", svgHeight - countScale(data[key]))
+            .style("fill", color)
+            .style("stroke", "black")
+            .style("stroke-width", 0.5)
+            .attr("class", `smallbar`);
+        }
       }
 
       const createGraph = async function () {
@@ -316,7 +335,7 @@
             "y",
             barGraphHeight + barGraphMargin.top + barGraphMargin.bottom
           )
-          .text("Thereupetic Area");
+          .text("Therapeutic Area");
 
         barGraphAnnotations
           .append("text")
@@ -480,6 +499,7 @@
             top: -20,
             behavior: "smooth",
           });
+          d3.selectAll("circle").remove();
         }
 
         // function that gives the therapeutic area and whether or not it's approved or withdrawn
@@ -575,7 +595,8 @@
             let authorization = document.getElementById("author");
             let url = document.getElementById("url");
 
-            name.textContent = "Common Name: " + d.common_name;
+            document.getElementById("title").innerHTML = d.common_name;
+
             category.textContent = "Category: " + d.category;
             substance.textContent = "Active Substance: " + d.active_substance;
             authorization.textContent =
@@ -590,21 +611,31 @@
           // make some pie charts
 
           let genPie = d3.select("svg.generic");
+          let humanSvg = d3.select("svg.human");
 
           // generic v. co-generic
-          pieData = { Gen: 0, NonGen: 0 };
+          pieData = { Generic: 0, "Non Generic": 0 };
+
+          humanData = { Human: 0, Animal: 0 };
 
           filtered_data.forEach(function (d, i) {
             if (d["generic"] === "TRUE") {
-              pieData.Gen += 1;
+              pieData.Generic += 1;
             } else {
-              pieData.NonGen += 1;
+              pieData["Non Generic"] += 1;
+            }
+
+            if (d["species"] == "human") {
+              humanData.Human += 1;
+            } else {
+              humanData.Human += 1;
             }
           });
 
-          createSmallGraph(pieData, genPie);
+          //   createSmallGraph(pieData, genPie, "Generic", "Non Generic");
+          //   createSmallGraph(humanData, humanSvg, "human", "animal");
 
-          console.log("pieData", pieData);
+          console.log("pieData", pieData, humanData);
 
           window.scrollTo({
             top: 1000,
