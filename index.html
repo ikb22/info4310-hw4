@@ -103,10 +103,6 @@
         <div>
           <svg id="barGraph" height="750" width="1300"></svg>
           <h2 id="subtitle" style="margin-top: 20px"></h2>
-          <div class="pie">
-            <!-- <svg class="generic" height="300" width="200"></svg>
-            <svg class="human" height="300" width="200"></svg> -->
-          </div>
           <div>
             <div style="display: block; text-align: left; margin-left: 10px">
               <h2>Timeline of Drugs Publish Date</h2>
@@ -156,9 +152,6 @@
         barTotalHeight - barGraphMargin.top - barGraphMargin.bottom - 10;
       let barGraphAnnotations = barGraph.append("g").attr("id", "annotations");
 
-      //   let genHisto = d3.select("svg#gen");
-      //   let genAnnotations = genHisto.append("g").attr("id", "genAnnotations");
-
       let areas = [
         "Diabetes Mellitus, Type 2",
         "HIV Infections",
@@ -172,104 +165,9 @@
         "Epilepsy",
       ];
 
-      function createSmallGraph(data, svg, cat1, cat2) {
-        console.log("svg", svg);
-        // bar chart setup
-        const barTotalWidth = svg.attr("width");
-        const barTotalHeight = svg.attr("height");
-        const svgMargin = {
-          top: 20,
-          right: 20,
-          bottom: 90,
-          left: 60,
-        };
-        const svgWidth = barTotalWidth - svgMargin.left - svgMargin.right;
-        const svgHeight =
-          barTotalHeight - svgMargin.top - svgMargin.bottom - 10;
-        let svgAnnotations = svg.append("g").attr("id", "svgAnnotations");
-
-        // Y scale (Count)
-        let countScale = d3.scaleLinear().domain([0, 80]).range([svgHeight, 0]);
-
-        console.log("test count", countScale("80"));
-
-        // X Scale (Category)
-        let areaScale = d3
-          .scaleBand()
-          .domain([cat1, cat2])
-          .range([0, svgWidth]);
-
-        console.log("test scale:", areaScale("Gen"));
-
-        // Y Axis
-        let bottomAxis = d3.axisBottom(areaScale);
-        svgAnnotations
-          .append("g")
-          .attr("class", "x axis")
-          .attr(
-            "transform",
-            `translate(${svgMargin.left}, ${svgHeight + svgMargin.top + 10})`
-          )
-          .call(bottomAxis)
-          .selectAll("text")
-          .style("text-anchor", "end")
-          .attr("transform", "translate(-10, 2) rotate(-45)");
-
-        let leftAxis = d3.axisLeft(countScale);
-        svgAnnotations
-          .append("g")
-          .attr("class", "y axis")
-          .attr(
-            "transform",
-            `translate(${svgMargin.left - 10}, ${svgMargin.top})`
-          )
-          .call(leftAxis);
-
-        svgAnnotations
-          .append("text")
-          .attr("class", "x label")
-          .attr("text-anchor", "middle")
-          .attr("x", svgWidth / 2 + svgMargin.left)
-          .attr("y", svgHeight + svgMargin.top + svgMargin.bottom)
-          .text("Therapeutic Area");
-
-        svgAnnotations
-          .append("text")
-          .attr("class", "y label")
-          .attr("text-anchor", "middle")
-          .attr("y", 5)
-          .attr("x", -svgHeight / 2 + svgMargin.top)
-          .attr("dy", ".6em")
-          .attr("transform", "rotate(-90)")
-          .text("Count");
-
-        let color;
-
-        for (key in data) {
-          //make some bars
-          if (key == cat1) {
-            color = "green";
-          } else {
-            color = "red";
-          }
-
-          svg
-            .append("rect")
-            .attr("x", areaScale(key) + svgMargin.left + 15)
-            .attr("y", countScale(data[key]) + svgMargin.top)
-            .attr("width", 30)
-            .attr("height", svgHeight - countScale(data[key]))
-            .style("fill", color)
-            .style("stroke", "black")
-            .style("stroke-width", 0.5)
-            .attr("class", `smallbar`);
-        }
-      }
-
       const createGraph = async function () {
         let histo = d3.select("#histo");
         let drug_data = await d3.csv("drugs_clean.csv");
-        console.log(drug_data);
 
         hist_approved = {};
         hist_withdrawn = {};
@@ -288,15 +186,12 @@
           }
         });
 
-        console.log("hist:", hist_approved, hist_withdrawn);
 
         // Y scale (Count)
         let countScale = d3
           .scaleLinear()
           .domain([0, 100])
           .range([barGraphHeight, 0]);
-
-        console.log("test count", countScale("80"));
 
         // X Scale (Category)
         let areaScale = d3.scaleBand().domain(areas).range([0, barGraphWidth]);
@@ -374,8 +269,6 @@
           .style("opacity", 0.8)
           .style("stroke-width", 1)
           .text("Withdrawn");
-
-        console.log(d3.selectAll(".legend"));
 
         d3.selectAll("text.legend")
           .on("mouseover", function (d) {
@@ -472,8 +365,8 @@
             })
             .on("click", function (d) {
               let area = d3.select(this).attr("therapeutic_area");
+              d3.selectAll("#remove").remove();
               barSelected(area);
-              console.log("trying to run clicked");
             });
         }
 
@@ -500,6 +393,7 @@
             behavior: "smooth",
           });
           d3.selectAll("circle").remove();
+          d3.selectAll("#remove").remove();
         }
 
         // function that gives the therapeutic area and whether or not it's approved or withdrawn
@@ -535,23 +429,12 @@
           timelineAnnotations
             .append("g")
             .attr("class", "x axis timeline")
-            .attr("id", "timeline")
+            .attr("id", "remove")
             .attr(
               "transform",
               `translate(${timeline_margins.left},${graphHeight})`
             )
             .call(timeline_bottomAxis);
-
-          let timelines = Array.from(
-            document.getElementsByClassName("timeline")
-          );
-          console.log("lines", timelines);
-
-          //   timelines.forEach(function (value, i) {
-          //     if (i === 0) {
-          //       value.remove();
-          //     }
-          //   });
 
           let circles = timelineArea
             .selectAll("circle.dot")
@@ -608,43 +491,11 @@
             object.attr("r", 8).attr("stroke", "none").attr("opacity", 0.5);
           }
 
-          // make some pie charts
-
-          let genPie = d3.select("svg.generic");
-          let humanSvg = d3.select("svg.human");
-
-          // generic v. co-generic
-          pieData = { Generic: 0, "Non Generic": 0 };
-
-          humanData = { Human: 0, Animal: 0 };
-
-          filtered_data.forEach(function (d, i) {
-            if (d["generic"] === "TRUE") {
-              pieData.Generic += 1;
-            } else {
-              pieData["Non Generic"] += 1;
-            }
-
-            if (d["species"] == "human") {
-              humanData.Human += 1;
-            } else {
-              humanData.Human += 1;
-            }
-          });
-
-          //   createSmallGraph(pieData, genPie, "Generic", "Non Generic");
-          //   createSmallGraph(humanData, humanSvg, "human", "animal");
-
-          console.log("pieData", pieData, humanData);
-
           window.scrollTo({
             top: 1000,
             behavior: "smooth",
           });
         }
-
-        // ISABELLE CODE
-        // isabelle --> timeline graph + specific drug information in tabular view
 
         let timeline = d3.select("#timeline");
         let timeline_width = timeline.attr("width");
