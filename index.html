@@ -84,8 +84,8 @@
         <p>
           <span
             style="color: green; font-weight: bold; text-decoration: underline"
-            >Hover </span
-          >over legend to filter bars by approval status.
+            >Hover</span
+          > over legend to filter bars by approval status.
           <span
             style="color: green; font-weight: bold; text-decoration: underline"
           >
@@ -391,12 +391,9 @@
 
         // function that gives the therapeutic area and whether or not it's approved or withdrawn
         function barSelected(area) {
-          console.log("click: ", area);
-          // therapeutic area selected
+          //timeline.selectAll("*").remove();
           let ta = area.substring(0, area.indexOf("--"));
-          // approval status
           let approval = area.substring(area.indexOf("--") + 2);
-          console.log(ta, approval);
 
           let filtered_data = drug_data.filter(
             (d) => d["therapeutic_area"] === ta
@@ -413,6 +410,27 @@
           document.getElementsByClassName(ta)[0].style.opacity = 1.0;
           document.getElementsByClassName(ta)[1].style.opacity = 1.0;
 
+          let time_extent = d3.extent(filtered_data, (d) =>
+            timeParser(d["first_published"])
+          );
+
+          let timeScale = d3
+            .scaleTime()
+            .domain(time_extent)
+            .range([0, graphWidth]);
+
+          // remove exisiting x axis 
+
+          let timeline_bottomAxis = d3.axisBottom(timeScale);
+          timelineAnnotations
+            .append("g")
+            .attr("class", "x axis")
+            .attr(
+              "transform",
+              `translate(${timeline_margins.left},${graphHeight})`
+            )
+            .call(timeline_bottomAxis);
+
           let circles = timelineArea
             .selectAll("circle.dot")
             .data(filtered_data)
@@ -426,12 +444,12 @@
             .attr("cx", (d) => timeScale(timeParser(d["first_published"])))
             .attr("cy", (d) => {
               if (d["authorisation_status"] === "authorised") {
-                return 30;
+                return 180;
               } else {
-                return 60;
+                return 300;
               }
             })
-            .attr("r", 5)
+            .attr("r", 8)
             .attr("opacity", 0.5)
             .style("fill", (d) => {
               if (d["authorisation_status"] === "authorised") {
@@ -444,7 +462,7 @@
           function mouseOver(event, d) {
             let object = d3.select(this);
             object
-              .attr("r", 6)
+              .attr("r", 11)
               .attr("stroke", "black")
               .attr("stroke-width", 2)
               .attr("opacity", 0.8);
@@ -464,7 +482,7 @@
           }
           function mouseOut(event, d) {
             let object = d3.select(this);
-            object.attr("r", 5).attr("stroke", "none").attr("opacity", 0.5);
+            object.attr("r", 8).attr("stroke", "none").attr("opacity", 0.5);
           }
 
           window.scrollTo({
@@ -495,26 +513,8 @@
             `translate(${timeline_margins.left},${timeline_margins.top})`
           );
 
-        // how to time parse the time format we are given???
         const timeParser = d3.timeParse("%Y-%m-%dT%H:%M:%SZ");
-        let time_extent = d3.extent(drug_data, (d) =>
-          timeParser(d["first_published"])
-        );
-        console.log("time extent", time_extent);
-        const timeScale = d3
-          .scaleTime()
-          .domain(time_extent)
-          .range([0, graphWidth]);
-
-        let timeline_bottomAxis = d3.axisBottom(timeScale);
-        timelineAnnotations
-          .append("g")
-          .attr("class", "x axis")
-          .attr(
-            "transform",
-            `translate(${timeline_margins.left},${graphHeight})`
-          )
-          .call(timeline_bottomAxis);
+        
       };
       createGraph();
     </script>
