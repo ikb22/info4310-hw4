@@ -399,8 +399,8 @@
             (d) => d["therapeutic_area"] === ta
           );
 
-          let buttonHTML = `<span id='clear' class="clear"> (Clear Selection)</span>`;
-          let taHTML = `<span> ${ta}</span>`;
+          let buttonHTML = `<span id='clear' class="clear">(Clear Selection)</span>`;
+          let taHTML = `<span> ${ta} </span>`;
 
           document.getElementById("subtitle").innerHTML = taHTML + buttonHTML;
           d3.selectAll(".bar").style("opacity", 0.1);
