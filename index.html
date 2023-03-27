@@ -8,14 +8,26 @@
         flex-direction: row;
         justify-content: space-between;
       }
+
       .center {
         text-align: center;
       }
-      #drug_details {
-        width: 30%;
-        margin: 10px;
-        padding: 5px;
+
+      .clear {
+        cursor: pointer;
       }
+
+      .clear:hover {
+        text-decoration: underline;
+      }
+
+      #drug_details {
+        width: 400px;
+        margin: 10px;
+        padding: 10px;
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+      }
+
       #barchart {
         border: 1px solid black;
       }
@@ -29,6 +41,11 @@
 
       .legend {
         font-family: "Roboto Slab", sans-serif;
+        cursor: pointer;
+      }
+
+      .legend:hover {
+        text-decoration: underline;
       }
 
       .axis {
@@ -40,11 +57,15 @@
         stroke-width: 3px;
       }
 
+      #barGraph,
+      #timeline {
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+      }
+
       .box:hover {
         stroke: black;
         stroke-width: 3px;
       }
-
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -54,34 +75,62 @@
     />
   </head>
   <body>
-    <div class="center">
-      <h1>Visualizing European Drug Development in the Past 20 Years</h1>
-      <svg id="barGraph" height="600" width="1000"></svg>
-      <h3 id="subtitle" style="margin-top: 20px; text-decoration: underline;"> </h3>
-    </div>
-    <div class="flex">
-      <svg id="timeline" height="100" width="900"></svg>
-      <div id="drug_details">
-        <p style="text-align: center; text-decoration: underline">
-          Drug Details:
+    <div class="center" style="display: flex">
+      <div>
+        <h1>European Drug Development in the Past 20 Years</h1>
+        <p>
+          <span
+            style="color: green; font-weight: bold; text-decoration: underline"
+            >Hover </span
+          >over legend to filter bars by approval status.
+          <span
+            style="color: green; font-weight: bold; text-decoration: underline"
+          >
+            Hover</span
+          >
+          over bar to see drug count.
+          <span
+            style="color: green; font-weight: bold; text-decoration: underline"
+            >Click</span
+          >
+          on bar to see all drugs in the given therapeutic area.
         </p>
-        <p id="name"> Common Name: </p>
-        <p id="category"> Category: </p>
-        <p id="substance"> Active Substance: </p>
-        <p id="author"> Authorization Status: </p>
-        <p id="url"> Learn More: </p>
+        <div>
+          <svg id="barGraph" height="750" width="1300"></svg>
+          <h2 id="subtitle" style="margin-top: 20px"></h2>
+          <div class="flex">
+            <svg id="timeline" height="500" width="860"></svg>
+            <div id="drug_details" style="text-align: center">
+              <p style="text-align: center; text-decoration: underline">
+                Drug Details:
+              </p>
+              <div style="text-align: left">
+                <p id="name"></p>
+                <p id="category"></p>
+                <p id="substance"></p>
+                <p id="author"></p>
+                <p id="url"></p>
+              </div>
+            </div>
+            <a
+              href="https://www.flaticon.com/free-icons/up-arrow"
+              title="up arrow icons"
+            ></a>
+          </div>
+        </div>
       </div>
     </div>
+
     <script>
       // bar chart setup
       let barGraph = d3.select("svg#barGraph");
       const barTotalWidth = barGraph.attr("width");
       const barTotalHeight = barGraph.attr("height");
       const barGraphMargin = {
-        top: 10,
-        right: 200,
+        top: 20,
+        right: 100,
         bottom: 180,
-        left: 70,
+        left: 100,
       };
       const barGraphWidth =
         barTotalWidth - barGraphMargin.left - barGraphMargin.right;
@@ -185,58 +234,43 @@
 
         // make some filters
 
-        // boxes
-        let a_box = barGraphAnnotations
-          .append("rect")
-          .attr("id", "a")
-          .attr("class", "box")
-          .attr("y", barGraphMargin.top)
-          .attr("x", 800)
-          .attr("height", 20)
-          .attr("width", 20)
-          .style("fill", "#90EF90");
-
-        let w_box = barGraphAnnotations
-          .append("rect")
-          .attr("id", "w")
-          .attr("class", "box")
-          .attr("y", barGraphMargin.top + 40)
-          .attr("x", 800)
-          .attr("height", 20)
-          .attr("width", 20)
-          .style("fill", "#FC6C85");
-
-        d3.selectAll(".box")
-          .on("mouseover", function (d) {
-            let type = d.target.id;
-            hideBars(type);
-          })
-          .on("mouseout", function () {
-            showAllBars();
-          });
-
-        // texts
+        // legend text
         barGraphAnnotations
           .append("text")
+          .attr("id", "a")
           .attr("class", "alegend legend")
           .attr("text-anchor", "middle")
-          .attr("y", barGraphMargin.top + 7)
-          .attr("x", 860)
-          .attr("dy", ".5em")
-          .style("stroke", "black")
-          .style("stroke-width", 0.5)
+          .attr("y", barGraphMargin.top + 30)
+          .attr("x", 1100)
+          .style("font-size", 24)
+          .style("fill", "green")
+          .style("stroke-width", 1)
           .text("Approved");
 
         barGraphAnnotations
           .append("text")
+          .attr("id", "w")
           .attr("class", "wlegend legend")
           .attr("text-anchor", "middle")
-          .attr("y", barGraphMargin.top + 47)
-          .attr("x", 865)
-          .attr("dy", ".5em")
-          .style("stroke", "black")
-          .style("stroke-width", 0.5)
+          .attr("y", barGraphMargin.top + 70)
+          .attr("x", 1110)
+          .style("font-size", 24)
+          .style("fill", "red")
+          .style("opacity", 0.8)
+          .style("stroke-width", 1)
           .text("Withdrawn");
+
+        console.log(d3.selectAll(".legend"));
+
+        d3.selectAll("text.legend")
+          .on("mouseover", function (d) {
+            let type = d.target.id;
+            hideBars(type);
+          })
+          .on("mouseout", function (d) {
+            let type = d.target.id;
+            showAllBars(type);
+          });
 
         let rectWidth = barGraphWidth / 20 - 10;
 
@@ -254,7 +288,9 @@
             .attr("y", countScale(a_count) + barGraphMargin.top)
             .attr("width", rectWidth)
             .attr("height", barGraphHeight - countScale(a_count))
-            .style("fill", "green")
+            .style("fill", "#90EF90")
+            .style("stroke", "black")
+            .style("stroke-width", 0.5)
             .attr("class", `a ${key} bar`)
             .attr("area", barCount)
             .attr("therapeutic_area", key + "--" + "a")
@@ -276,8 +312,8 @@
             .attr("class", "acount")
             .attr("id", barCount)
             .attr("text-anchor", "middle")
-            .attr("y", countScale(a_count) - 10)
-            .attr("x", areaScale(key) + barGraphMargin.left + 24)
+            .attr("y", countScale(a_count))
+            .attr("x", areaScale(key) + barGraphMargin.left + 32)
             .attr("dy", ".5em")
             .style("stroke", "green")
             .style("fill", "green")
@@ -291,8 +327,8 @@
             .attr("class", "wcount")
             .attr("id", barCount)
             .attr("text-anchor", "middle")
-            .attr("y", countScale(w_count) - 10)
-            .attr("x", areaScale(key) + barGraphMargin.left + 50)
+            .attr("y", countScale(w_count))
+            .attr("x", areaScale(key) + barGraphMargin.left + 77)
             .attr("dy", ".5em")
             .style("stroke", "red")
             .style("fill", "red")
@@ -301,12 +337,14 @@
 
           barGraph
             .append("rect")
-            .attr("x", areaScale(key) + barGraphMargin.left + 36.5)
+            .attr("x", areaScale(key) + barGraphMargin.left + 55)
             .attr("y", countScale(w_count) + barGraphMargin.top)
             .attr("width", rectWidth)
             .attr("height", barGraphHeight - countScale(w_count))
             .attr("area", barCount)
-            .style("fill", "red")
+            .style("fill", "#FC6C85")
+            .style("stroke", "black")
+            .style("stroke-width", 0.5)
             .attr("class", `w ${key} bar`)
             .attr("therapeutic_area", key + "--" + "w")
             .on("mouseover", function (d) {
@@ -320,6 +358,8 @@
             .on("click", function (d) {
               let area = d3.select(this).attr("therapeutic_area");
               barSelected(area);
+              console.log("trying to run clicked");
+              scrollUp();
             });
         }
 
@@ -329,23 +369,14 @@
             .selectAll(`.${type}`)
             .transition()
             .style("opacity", "1");
-          let color = type == "a" ? "green" : "red";
-          let selectedText = d3
-            .selectAll(`.${type}legend`)
-            .transition()
-            .style("stroke", color);
         }
 
         function highlightBar(bar) {
           bar.style("stroke", "black");
         }
 
-        function showAllBars() {
+        function showAllBars(type) {
           d3.selectAll(`.bar`).transition().style("opacity", "1");
-          let selectedText = d3
-            .selectAll(`.legend`)
-            .transition()
-            .style("stroke", "black");
         }
 
         // function that gives the thereapeutic area and whether or not it's approved or withdrawn
@@ -357,63 +388,77 @@
           let approval = area.substring(area.indexOf("--") + 2);
           console.log(ta, approval);
 
-          let filtered_data = drug_data.filter(d => d['therapeutic_area'] === ta );
-          document.getElementById("subtitle").innerHTML = ta;
+          let filtered_data = drug_data.filter(
+            (d) => d["therapeutic_area"] === ta
+          );
 
+          let buttonHTML = `<span onclick='clearSelection()' class='clear'> (Clear Selection)</span>`;
+          let taHTML = `<span> ${ta}</span>`;
 
-          let circles = timelineArea.selectAll("circle.dot").data(filtered_data)
-                  .join((enter) =>
-                    enter
-                      .append("circle")
-                      .attr("class", "dot")
-                      .on("mouseover", mouseOver)
-                      .on("mouseout", mouseOut)
-                  )
-                  .attr("cx", d => timeScale(timeParser(d['first_published'])))
-                  .attr("cy", d => {
-                          if (d['authorisation_status'] === "authorised") {
-                            return 30
-                          }
-                          else{
-                            return 60
-                          }
-                  })
-                  .attr("r", 5)
-                  .attr("opacity", 0.5)
-                  .style("fill", d => {
-                          if (d['authorisation_status'] === "authorised") {
-                            return "green"
-                          }
-                          else{
-                            return "red"
-                          }
-                  })
+          document.getElementById("subtitle").innerHTML = taHTML + buttonHTML;
+          d3.selectAll(".bar").style("opacity", 0.4);
+
+          document.getElementsByClassName(ta)[0].style.opacity = 1.0;
+          document.getElementsByClassName(ta)[1].style.opacity = 1.0;
+
+          let circles = timelineArea
+            .selectAll("circle.dot")
+            .data(filtered_data)
+            .join((enter) =>
+              enter
+                .append("circle")
+                .attr("class", "dot")
+                .on("mouseover", mouseOver)
+                .on("mouseout", mouseOut)
+            )
+            .attr("cx", (d) => timeScale(timeParser(d["first_published"])))
+            .attr("cy", (d) => {
+              if (d["authorisation_status"] === "authorised") {
+                return 30;
+              } else {
+                return 60;
+              }
+            })
+            .attr("r", 5)
+            .attr("opacity", 0.5)
+            .style("fill", (d) => {
+              if (d["authorisation_status"] === "authorised") {
+                return "green";
+              } else {
+                return "red";
+              }
+            });
 
           function mouseOver(event, d) {
-              let object = d3.select(this);
-              object.attr("r", 6).attr("stroke", "black").attr("stroke-width", 2)
-                                  .attr("oppacity", 0.8)
+            let object = d3.select(this);
+            object
+              .attr("r", 6)
+              .attr("stroke", "black")
+              .attr("stroke-width", 2)
+              .attr("opacity", 0.8);
 
-              let name = document.getElementById("name");
-              let category = document.getElementById("category");
-              let substance = document.getElementById("substance");
-              let authorization = document.getElementById("author");
-              let url = document.getElementById("url");
-   
+            let name = document.getElementById("name");
+            let category = document.getElementById("category");
+            let substance = document.getElementById("substance");
+            let authorization = document.getElementById("author");
+            let url = document.getElementById("url");
 
-              name.textContent = "Common Name: " + d.common_name;
-              category.textContent = "Category: " + d.category;
-              substance.textContent = "Active Substance: " + d.active_substance;
-              authorization.textContent = "Authorization Status: " + d.authorisation_status;
-              url.textContent = "Learn More: " + d.url;
-
+            name.textContent = "Common Name: " + d.common_name;
+            category.textContent = "Category: " + d.category;
+            substance.textContent = "Active Substance: " + d.active_substance;
+            authorization.textContent =
+              "Authorization Status: " + d.authorisation_status;
+            url.textContent = "Learn More: " + d.url;
           }
           function mouseOut(event, d) {
-              let object = d3.select(this);
-              object.attr("r", 5).attr("stroke", "none").attr("oppacity", 0.5);
-
+            let object = d3.select(this);
+            object.attr("r", 5).attr("stroke", "none").attr("opacity", 0.5);
           }
 
+          window.scrollTo({
+            top: 1000,
+            behavior: "smooth",
+          });
         }
 
         // ISABELLE CODE
@@ -430,8 +475,13 @@
         let timelineAnnotations = timeline
           .append("g")
           .attr("id", "annotations");
-        let timelineArea = timeline.append("g").attr("id","points")
-                                    .attr("transform",`translate(${timeline_margins.left},${timeline_margins.top})`);
+        let timelineArea = timeline
+          .append("g")
+          .attr("id", "points")
+          .attr(
+            "transform",
+            `translate(${timeline_margins.left},${timeline_margins.top})`
+          );
 
         // how to time parse the time format we are given???
         const timeParser = d3.timeParse("%Y-%m-%dT%H:%M:%SZ");
@@ -453,7 +503,6 @@
             `translate(${timeline_margins.left},${graphHeight})`
           )
           .call(timeline_bottomAxis);
-
       };
       createGraph();
     </script>
